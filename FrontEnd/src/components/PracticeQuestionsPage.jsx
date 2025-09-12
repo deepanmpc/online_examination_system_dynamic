@@ -1,39 +1,48 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+const fetchPracticeQuestions = async () => {
+  const response = await axios.get("http://localhost:8080/api/practice-questions");
+  return response.data;
+};
 
 const PracticeQuestions = () => {
-  // State for storing the selected subject and exam type
+  const { data: practiceQuestions, isLoading, isError } = useQuery({
+    queryKey: ["practiceQuestions"],
+    queryFn: fetchPracticeQuestions,
+  });
+
   const [subject, setSubject] = useState("");
   const [examType, setExamType] = useState("");
-  const [pdfUrl, setPdfUrl] = useState(""); // To store the PDF URL
+  const [pdfUrl, setPdfUrl] = useState("");
 
-  // Available subjects and exam types (you can expand these as needed)
-  const subjects = ["Math", "History", "Computer Science", "Physics", "Chemistry"];
-  const examTypes = ["Midterm", "Final", "Practical"];
+  const subjects = practiceQuestions
+    ? [...new Set(practiceQuestions.map((q) => q.subject))]
+    : [];
+  const examTypes = practiceQuestions
+    ? [...new Set(practiceQuestions.map((q) => q.examType))]
+    : [];
 
-  // Function to fetch the PDF URL based on the selected subject and exam type
   const fetchPDF = () => {
-    // You can replace the following URLs with the actual URLs of the PDFs
-    const pdfLinks = {
-      "Math": {
-        "Midterm": "https://www.selfstudys.com/advance-pdf-viewer/cbse-sample-paper/english/12th/mathematics/mathematics-cbse-model-question-papers-2025-with-marking-scheme/1117023",
-        "Final": "https://www.selfstudys.com/advance-pdf-viewer/cbse-sample-paper/english/12th/mathematics/mathematics-2025-set-2/1119312",
-        "Practical": "https://www.selfstudys.com/advance-pdf-viewer/cbse-sample-paper/english/12th/mathematics/mathematics-2025-set-4/1119310",
-      },
-      "History": {
-        "Midterm": "https://www.selfstudys.com/advance-pdf-viewer/cbse-sample-paper/english/12th/history/history-cbse-model-question-papers-2025-with-marking-scheme/1117012",
-        "Final": "https://www.selfstudys.com/advance-pdf-viewer/cbse-sample-paper/english/12th/history/history-2025-set-1/1132368",
-        "Practical": "https://www.selfstudys.com/advance-pdf-viewer/cbse-sample-paper/english/12th/history/history-2025-set-3/1132366",
-      },
-      // Add more subjects and exam types here...
-    };
+    const question = practiceQuestions.find(
+      (q) => q.subject === subject && q.examType === examType
+    );
 
-    // Check if the selected subject and exam type are valid
-    if (pdfLinks[subject] && pdfLinks[subject][examType]) {
-      setPdfUrl(pdfLinks[subject][examType]);
+    if (question) {
+      setPdfUrl(question.pdfUrl);
     } else {
       alert("No PDF found for the selected subject and exam type.");
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error fetching data</div>;
+  }
 
   return (
     <div>
@@ -41,7 +50,6 @@ const PracticeQuestions = () => {
       <div className="mt-4">
         <p>Here you can practice questions for your upcoming exams.</p>
 
-        {/* Subject selection */}
         <div className="mt-4">
           <label className="block text-sm font-medium">Select Subject:</label>
           <select
@@ -58,7 +66,6 @@ const PracticeQuestions = () => {
           </select>
         </div>
 
-        {/* Exam type selection */}
         <div className="mt-4">
           <label className="block text-sm font-medium">Select Exam Type:</label>
           <select
@@ -75,7 +82,6 @@ const PracticeQuestions = () => {
           </select>
         </div>
 
-        {/* Button to fetch the PDF */}
         <div className="mt-4">
           <button
             onClick={fetchPDF}
@@ -85,15 +91,15 @@ const PracticeQuestions = () => {
           </button>
         </div>
 
-        {/* Display the download link if PDF is available */}
         {pdfUrl && (
           <div className="mt-4">
             <a
               href={pdfUrl}
-              download
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-blue-500 hover:underline"
             >
-              Click here to download the practice questions PDF
+              Click here to view the practice questions PDF
             </a>
           </div>
         )}

@@ -6,14 +6,17 @@ import { Toaster } from 'react-hot-toast';
 // Layout and page components
 import AppLayout from './ui/AppLayout';
 import Dashboard from './ui/Dashboard';
+import AdminDashboard from './ui/AdminDashboard'; // Import AdminDashboard
 import Home from './pages/Home';
 import Login from './components/Login';
 import Register from './components/Register';
+import ProtectedRoute from './components/ProtectedRoute';
 import Batches from './pages/Batches';
 import CourseBatches from './features/batches/CourseBatches';
 import CombinedExamModule from './features/exams/CombinedExamModule';
 import Question from './pages/Questions';
 import CreateExamQuestion from './features/questions/CreateExamQuestion';
+import CreateMcqForm from './features/questions/CreateMcqForm';
 import ContactForm from './pages/ContactForm';
 import SubjectsPage from './features/subjects/SubjectsPage';
 import Semesters from './features/semesters/SemestersPage';
@@ -50,9 +53,9 @@ function App() {
           <Route path="/contactus" element={<ContactForm />} />
           <Route path="/about" element={<About />} />
 
-          {/* Dashboard & Admin Routes */}
-          <Route path="/dashboard" element={<AppLayout />}>
-            <Route index element={<Dashboard />} />
+          {/* Admin Routes */}
+          <Route path="/admin-dashboard" element={<ProtectedRoute allowedRoles={["admin"]}><AppLayout /></ProtectedRoute>}>
+            <Route index element={<AdminDashboard />} /> {/* Admin Dashboard content */}
             <Route path="batches" element={<Batches />} />
             <Route path="batches/:courseName" element={<CourseBatches />} />
             <Route path="exams" element={<CombinedExamModule />} />
@@ -60,14 +63,18 @@ function App() {
             <Route path="subjects" element={<SubjectsPage />} />
             <Route path="questions" element={<Question />} />
             <Route path="questions/:examName" element={<CreateExamQuestion />} />
-            <Route path="marks" element={<Marks />} /> {/* ✅ Route added here */}
+            <Route path="create-mcq" element={<CreateMcqForm />} />
+            <Route path="marks" element={<Marks />} />
           </Route>
 
-          {/* Other Exam Routes */}
-          <Route path="/online-exam" element={<OnlineExamPage />} />
-          <Route path="/practice-questions" element={<PracticeQuestionsPage />} />
-          <Route path="/exam-schedules" element={<ExamSchedulesPage />} />
-<Route path="/sample-papers" element={<SamplePapers />} />
+          {/* Student Routes */}
+          <Route path="/student-dashboard" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout /></ProtectedRoute>}>
+            <Route index element={<Dashboard />} /> {/* Student Dashboard content */}
+          </Route>
+          <Route path="/online-exam" element={<ProtectedRoute allowedRoles={["student"]}><OnlineExamPage /></ProtectedRoute>} />
+          <Route path="/practice-questions" element={<ProtectedRoute allowedRoles={["student"]}><PracticeQuestionsPage /></ProtectedRoute>} />
+          <Route path="/exam-schedules" element={<ProtectedRoute allowedRoles={["student"]}><ExamSchedulesPage /></ProtectedRoute>} />
+          <Route path="/sample-papers" element={<ProtectedRoute allowedRoles={["student"]}><SamplePapers /></ProtectedRoute>} />
         </Routes>
       </Router>
     </QueryClientProvider>

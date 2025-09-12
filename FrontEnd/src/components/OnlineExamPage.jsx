@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+
+const fetchExams = async () => {
+  const response = await axios.get("http://localhost:8080/api/admin/exams");
+  return response.data;
+};
+
+const fetchRandomMcqsByExam = async (examName, count) => {
+  if (!examName || !count) return [];
+  const response = await axios.get(`http://localhost:8080/api/admin/mcqs/${examName}/random/${count}`);
+  return response.data;
+};
 
 const OnlineExamPage = () => {
   const [formData, setFormData] = useState({
@@ -7,7 +19,7 @@ const OnlineExamPage = () => {
     year: "",
     course: "",
     examName: "",
-    examPassword: "",
+    questionCount: 5, // Default to 5 random questions
     isExamStarted: false,
   });
 
@@ -15,32 +27,17 @@ const OnlineExamPage = () => {
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
-  const examPassword = "Exam123"; // The correct password for the exam
+  const { data: exams, isLoading: examsLoading, isError: examsError } = useQuery({
+    queryKey: ["exams"],
+    queryFn: fetchExams,
+  });
 
-  const questions = [
-    { id: 1, question: "What does HTML stand for?", answer: "Hyper Text Markup Language" },
-    { id: 2, question: "What is the capital of France?", answer: "Paris" },
-    { id: 3, question: "2 + 2 * 2 = ?", answer: "6" },
-    { id: 4, question: "React is a ___ library?", answer: "JavaScript" },
-    { id: 5, question: "CSS stands for?", answer: "Cascading Style Sheets" },
-    { id: 6, question: "What is the boiling point of water?", answer: "100" },
-    { id: 7, question: "Who wrote 'Hamlet'?", answer: "Shakespeare" },
-    { id: 8, question: "What does CPU stand for?", answer: "Central Processing Unit" },
-    { id: 9, question: "Which planet is known as the Red Planet?", answer: "Mars" },
-    { id: 10, question: "Speed = Distance / ___ ?", answer: "Time" },
-    { id: 11, question: "HTML tag for image?", answer: "img" },
-    { id: 12, question: "Earth has how many moons?", answer: "1" },
-    { id: 13, question: "Largest organ in human body?", answer: "Skin" },
-    { id: 14, question: "What does JS stand for?", answer: "JavaScript" },
-    { id: 15, question: "H2O is the formula for?", answer: "Water" },
-    { id: 16, question: "What year did WW2 end?", answer: "1945" },
-    { id: 17, question: "PI is approximately?", answer: "3.14" },
-    { id: 18, question: "Which gas do plants absorb?", answer: "Carbon Dioxide" },
-    { id: 19, question: "React is developed by?", answer: "Facebook" },
-    { id: 20, question: "RAM stands for?", answer: "Random Access Memory" },
-  ];
+  const { data: questions, isLoading: questionsLoading, isError: questionsError } = useQuery({
+    queryKey: ["mcqs", formData.examName, formData.questionCount],
+    queryFn: () => fetchRandomMcqsByExam(formData.examName, formData.questionCount),
+    enabled: !!formData.examName && formData.questionCount > 0,
+  });
 
   useEffect(() => {
     let interval;
@@ -71,17 +68,12 @@ const OnlineExamPage = () => {
   };
 
   const startExam = () => {
-    const { studentId, year, course, examName, examPassword: enteredPassword } = formData;
+    const { studentId, year, course, examName, questionCount } = formData;
 
-    if (studentId && year && course && examName && enteredPassword) {
-      if (enteredPassword === examPassword) {
-        setPasswordError(""); // Clear any previous password errors
-        setFormData((prev) => ({ ...prev, isExamStarted: true }));
-      } else {
-        setPasswordError("Incorrect password. Please try again.");
-      }
+    if (studentId && year && course && examName && questionCount > 0) {
+      setFormData((prev) => ({ ...prev, isExamStarted: true }));
     } else {
-      alert("Please fill in all fields to start the exam.");
+      alert("Please fill in all fields and specify question count to start the exam.");
     }
   };
 
@@ -101,7 +93,6 @@ const OnlineExamPage = () => {
     setScore(scoreCount);
     setIsSubmitted(true);
 
-    // Prepare the data for the API request
     const data = {
       studentId: formData.studentId,
       year: formData.year,
@@ -110,7 +101,6 @@ const OnlineExamPage = () => {
       score: scoreCount,
     };
 
-    // Send the data to the backend API
     try {
       await axios.post("http://localhost:8080/api/exam-participants", data, {
         headers: {
@@ -173,21 +163,28 @@ const OnlineExamPage = () => {
             className="w-full p-2 border rounded"
           >
             <option value="">Select Exam</option>
-            <option value="Midterm Physics">Midterm Physics</option>
-            <option value="Final Chemistry">Final Chemistry</option>
-            <option value="Mathematics Internal">Mathematics Internal</option>
-            <option value="Computer Science Theory">Computer Science Theory</option>
+            {examsLoading ? (
+              <option>Loading exams...</option>
+            ) : examsError ? (
+              <option>Error loading exams</option>
+            ) : (
+              exams.map((exam) => (
+                <option key={exam.id} value={exam.name}>
+                  {exam.name}
+                </option>
+              ))
+            )}
           </select>
 
           <input
-            type="password"
-            name="examPassword"
-            value={formData.examPassword}
+            type="number"
+            name="questionCount"
+            value={formData.questionCount}
             onChange={handleInputChange}
-            placeholder="Enter Exam Password"
+            placeholder="Number of random questions"
             className="w-full p-2 border rounded"
+            min="1"
           />
-          {passwordError && <p className="text-red-500">{passwordError}</p>}
 
           <button
             onClick={startExam}
@@ -216,19 +213,33 @@ const OnlineExamPage = () => {
         </div>
       ) : (
         <>
-          {questions.map((q) => (
-            <div key={q.id} className="mb-4">
-              <p className="font-semibold mb-2">
-                {q.id}. {q.question}
-              </p>
-              <input
-                type="text"
-                className="w-full p-2 border rounded"
-                value={answers[q.id] || ""}
-                onChange={(e) => handleAnswerChange(e, q.id)}
-              />
-            </div>
-          ))}
+          {questionsLoading ? (
+            <div>Loading questions...</div>
+          ) : questionsError ? (
+            <div>Error loading questions</div>
+          ) : (
+            questions.map((q) => (
+              <div key={q.id} className="mb-4">
+                <p className="font-semibold mb-2">
+                  {q.id}. {q.question}
+                </p>
+                <div className="flex flex-col">
+                  {q.options.map((option, index) => (
+                    <label key={index} className="mb-2">
+                      <input
+                        type="radio"
+                        name={q.id}
+                        value={option}
+                        onChange={(e) => handleAnswerChange(e, q.id)}
+                        className="mr-2"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
           <button
             onClick={handleSubmit}
             className="mt-6 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"

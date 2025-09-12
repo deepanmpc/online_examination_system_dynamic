@@ -1,8 +1,10 @@
 package com.exam.fsad.controller;
 
+import com.exam.fsad.model.RegisteredUser; // Added import
 import com.exam.fsad.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException; // Added import
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -25,7 +27,10 @@ public class UserController {
         boolean isAuthenticated = userService.authenticate(username, password);
 
         if (isAuthenticated) {
-            return ResponseEntity.ok(Map.of("message", "Login successful", "user", username));
+            // Fetch the user again to get the role
+            RegisteredUser user = userService.getUserByUsername(username)
+                                            .orElseThrow(() -> new UsernameNotFoundException("User not found after authentication"));
+            return ResponseEntity.ok(Map.of("message", "Login successful", "user", username, "role", user.getRole()));
         } else {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials", "user", username));
         }
