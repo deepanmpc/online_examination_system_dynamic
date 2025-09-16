@@ -26,7 +26,7 @@ import About from './components/About';
 import OnlineExamPage from './components/OnlineExamPage';
 import PracticeQuestionsPage from './components/PracticeQuestionsPage';
 import ExamSchedulesPage from './components/ExamSchedulesPage';
-import SamplePapers from "./components/SamplePapers";
+import SamplePapers from "./components/samplepapers";
 import Marks from './features/Marks';
 
 const queryClient = new QueryClient({
