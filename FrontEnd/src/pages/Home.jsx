@@ -12,8 +12,9 @@ const Home = () => {
         <Navbar/>
         <Hero/>
         <FeatureCards/>
+        <ExamCategories/>
         <GallerySection/>
-        <ContactSection/>   
+        <ContactSection/>
     </>
   )
 }

@@ -26,7 +26,7 @@ import About from './components/About';
 import OnlineExamPage from './components/OnlineExamPage';
 import PracticeQuestionsPage from './components/PracticeQuestionsPage';
 import ExamSchedulesPage from './components/ExamSchedulesPage';
-import SamplePapers from "./components/samplepapers";
+import DownloadAllPapers from "./components/samplepapers"; 
 import Marks from './features/marks';
 
 const queryClient = new QueryClient({
@@ -43,7 +43,7 @@ function App() {
       <ReactQueryDevtools initialIsOpen={false} />
       <Toaster position="top-center" />
 
-      <Router>
+      <Router basename="/online_examination_system_dynamic/">
         <Routes>
 
           {/* Public Routes */}
@@ -74,7 +74,7 @@ function App() {
           <Route path="/online-exam" element={<ProtectedRoute allowedRoles={["student"]}><OnlineExamPage /></ProtectedRoute>} />
           <Route path="/practice-questions" element={<ProtectedRoute allowedRoles={["student"]}><PracticeQuestionsPage /></ProtectedRoute>} />
           <Route path="/exam-schedules" element={<ProtectedRoute allowedRoles={["student"]}><ExamSchedulesPage /></ProtectedRoute>} />
-          <Route path="/sample-papers" element={<ProtectedRoute allowedRoles={["student"]}><SamplePapers /></ProtectedRoute>} />
+          <Route path="/sample-papers" element={<ProtectedRoute allowedRoles={["student"]}><DownloadAllPapers /></ProtectedRoute>} />
         </Routes>
       </Router>
     </QueryClientProvider>

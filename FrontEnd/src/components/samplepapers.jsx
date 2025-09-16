@@ -69,4 +69,4 @@ const DownloadAllPapers = () => {
   );
 };
 
-export default SamplePapers;
+export default DownloadAllPapers;

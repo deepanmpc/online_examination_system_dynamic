@@ -140,7 +140,7 @@ function Login() {
           Sign in
         </button>
 
-        <div className="flex items-center my.jsx-4">
+        <div className="flex items-center my-4">
           <div className="border-t flex-grow"></div>
           <p className="mx-2 text-gray-500">or</p>
           <div className="border-t flex-grow"></div>
